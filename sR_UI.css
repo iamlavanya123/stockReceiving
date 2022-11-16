@@ -1,0 +1,18 @@
+.custom-class {
+ margin-left: 10px;
+}
+
+.required-field::before {
+    content: "*";
+    color: red;
+    margin-left:2px
+  }
+
+.table-title {
+  font-size: .6rem;
+  letter-spacing: 0.025rem;
+} 
+
+.buttonOverlay{
+  position: initial;
+}
