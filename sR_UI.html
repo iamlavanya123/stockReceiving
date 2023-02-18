@@ -1,0 +1,229 @@
+<template>
+    <lightning-card>
+        <h2 slot="title">
+            <lightning-icon icon-name="standard:account" size="small"></lightning-icon> 
+             <strong class="custom-class">Stock Receiving</strong>
+        </h2>
+        <lightning-record-edit-form object-api-name="Stock_Recieving__c">  
+                    <div class="slds-grid slds-gutters">
+                      <div class="slds-col slds-m-left_small">
+                        <!-- <lightning-input-field icon-name="standard:account" id="vendorid" variant="label-hidden" field-name="Vendor__c" onclick={setContact} required> </lightning-input-field>   -->
+                        <label for="vendorid" class="required-field">Vendor</label>
+                        <c-custom-lookup id="vendorid" obj-name="Account" search-placeholder="Search Account" icon-name="standard:account" filter="Vendor" accountid="" onlookupselected={handleAccountSelection} onclick={handleChange}> </c-custom-lookup>
+                    </div>
+                    <template if:true={showcon}>
+                      <div class="slds-col">
+                        <label for="contactid">Contact</label>
+                            <lightning-input required="true" variant="label-hidden" disabled="true" type="text" label="" value={cnctname}></lightning-input> 
+                       </div>
+                    </template>
+                    <template if:false={showcon}>
+                        <div class="slds-col">
+                          <label for="contactid">Contact</label>
+                          <c-custom-lookup id="contactid" obj-name="Contact" search-placeholder="Search Contact" filter="" accountid={accountId} icon-name="standard:contact" onlookupselected={handleContact}> </c-custom-lookup>
+                         </div>
+                      </template>
+                      <div class="slds-col">
+                        <label for="cmpyid"><div class="required-field">Company</div></label>
+                        <c-custom-lookup id="cmpyid" obj-name="Company__c" search-placeholder="Search Company" filter="" accountid="" icon-name="standard:customers" onlookupselected={handleCompany}> </c-custom-lookup>
+                        <!-- <lightning-input-field  id="cmpyid" variant="label-hidden" field-name="Company__c" ></lightning-input-field> -->
+                      </div>
+                      <div class="slds-col slds-m-right_small">
+                        <label for="walocid"><div class="required-field">Warehouse Location</div></label>
+                        <c-custom-lookup id="walocid" obj-name="Location__c" search-placeholder="Search Warehouse Location" filter="Warehouse" accountid="" icon-name="standard:home" onlookupselected={handleLocation}> </c-custom-lookup>
+                      </div>
+                </div>
+                <br>
+                <div class="slds-grid slds-gutters">
+                    <div class="slds-col slds-size_1-of-3 slds-m-left_small">
+                        <label for="rcdt"><div class="required-field">Receiving Date Time</div></label>
+                        <lightning-input id="rcdt" variant="label-hidden" type="datetime" onchange={handleChangeReceivedDateTime}></lightning-input>
+                      </div>
+
+                    <div class="slds-col slds-size_1-of-3">
+                        <label for="delnoid">Delivery Note Number</label>
+                        <lightning-input type="text" variant="label-hidden" id="delnoid" onchange={handleChangeDeliveryNoteNumber}></lightning-input>
+                    </div>
+                  
+                    <div class="slds-col slds-m-right_small">
+                        <label for="notesid">Notes</label>
+                        <lightning-input type="text" variant="label-hidden" id="notesid" onchange={handleChangeNotes}></lightning-input>
+                    </div>    
+                </div>
+                <div class="slds-section slds-is-open">
+                  <h3 class="slds-section__title slds-theme_shade">
+                    <span class="slds-truncate slds-p-horizontal_small" title="Stock Receiving Items">Stock Receiving Items</span>
+                  </h3>
+                </div>
+<template for:each={orderLines} for:item="rec" for:index="index" >
+    <div key={rec}>
+
+       
+              <div class="slds-grid slds-wrap slds-size_1-of-1 slds-medium-size_8-of-12 slds-large-size_5-of-12">
+                  <div class="slds-align_absolute-center slds-p-top_xx-small slds-col">
+                    <lightning-button label="Remove" icon-name="utility:close" icon-position="left" onclick={removeindexrow} name={rec.index}></lightning-button>
+                  </div>
+                  <div class="slds-col slds-size_4-of-6 slds-medium-size_8-of-12 slds-large-size_8-of-12">
+                    <template if:true={showtrans}>
+                        <div class="slds-col">
+                          <label for="transid">Select Transaction</label>
+                              <lightning-input required="true" variant="label-hidden" disabled="true" type="text" label="" value={transname}></lightning-input> 
+                         </div>
+                      </template>
+                      <template if:false={showtrans}>
+                          <div class="slds-col">
+                            <br>
+                            <label>Select Transaction</label>
+                            <c-custom-lookup obj-name="Purchase_Order__c" search-placeholder="Search Purchase Order" filter="" accountid={accountId} icon-name="standard:work_order_item" onlookupselected={handlePOSelection}> </c-custom-lookup>
+                           </div>
+                        
+                        </template>
+                   </div>
+              </div>
+             
+              <br>
+              <table class="slds-table slds-max-medium-table_stacked-horizontal slds-table_bordered">
+                <thead>
+                    <tr class="table-title">
+                        <th scope="col">
+                            <div class="slds-truncate slds-p-left_small" title="Serial Number">
+                                SL. NO.
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="Product">
+                                PRODUCT
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="Ordered QTY">
+                                ORDERED QTY
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="Remaining QTY">
+                                REMAINING QTY
+                          </div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate required-field" title="Receiving QTY">
+                               RECEIVING QTY
+                            </div>
+                        </th>
+                
+                        <th scope="col">
+                            <div class="slds-truncate required-field" title="Status">
+                                STATUS
+                            </div>
+                        </th>
+                    
+                        <th scope="col">
+                            <div class="slds-truncate required-field" title="Bin">
+                                BIN
+                            </div>
+                        </th>
+
+                        <th scope="col">
+                            <div class="slds-truncate" title="Batch No">
+                                BATCH NO.
+                            </div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="Expiry Date">
+                                EXPIRY DATE
+                            </div>
+                        </th>
+                    </tr>
+                
+                </thead>
+           
+                <tbody>
+                    <template for:each={poplist} for:item="lst" for:index="index">
+                        <tr key={lst}>
+                          <td>{lst.index}</td>
+
+                        <td data-label="Product">
+                            <lightning-input name="Product__c" type="text" data-id={rec.index} onchange={handleInputChange} title="Product__c" value={lst.Product__r.Name} disabled="true"></lightning-input>
+                        </td>
+                
+                        <td data-label="Original Quantity">
+                            <lightning-input name="Ordered_Qty__c" type="number" data-id={rec.index} onchange={handleInputChange} title="Ordered_Qty__c" value={lst.Quantity__c} disabled="true"></lightning-input>
+                        </td>
+                       
+                        <td data-label="Remaining Quantity">
+                            <lightning-input name="Remaining_Quantity__c" type="number" data-id={rec.index} onchange={handleInputChange} title="Remaining_Quantity__c" value={lst.Remaining_Qty__c} disabled="true"></lightning-input>
+                        </td>
+              
+                    <td>
+                        <div>
+                            <lightning-input name="Received_Quantity__c" type="number" data-id={rec.index} onchange={handleInputChange} title="Received Qty">
+                            </lightning-input>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <lightning-combobox type="combobox" data-id={rec.index} placeholder="Select Status" title="Status"  onchange={handleInputChange} options={statusoptions} name="Status__c">
+                            </lightning-combobox>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="bin">
+                           
+                            <!-- <c-custom-lookup  data-id={rec.index}  name="Bin_Location__c" obj-name="Bin_Location__c" search-placeholder="Search Bin Location" filter="" accountid="" icon-name="standard:customers" onlookupselected={handleBinSelection}> </c-custom-lookup>  -->
+                            <template if:true={showbin}>
+                                <div>
+                
+                                      <lightning-input data-id={rec.index} name="Bin_Location__c" required="true" variant="label-hidden"  type="text" label="" value={binname}></lightning-input> 
+                                 </div>
+                              </template>
+                              <template if:false={showbin}>
+                                  <div>
+                                   
+                                    
+                                    <c-custom-lookup data-id={rec.index} name="Bin_Location__c" obj-name="Bin_Location__c" search-placeholder="Search Bin Location" filter="" accountid={location} icon-name="standard:work_order_item" onlookupselected={handleBinSelection}> </c-custom-lookup>
+                                   </div>
+                                
+                                </template>
+                   
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <lightning-input name = "Batch_No__c" type="number" data-id={rec.index} onchange={handleInputChange} title ="Batch No">
+                            </lightning-input>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <lightning-input  name ="Expiry_Date__c"  type="date" data-id={rec.index} onchange={handleInputChange} title ="Expiry Date">
+                            </lightning-input>
+                        </div>
+                    </td>
+                </tr>
+                </template>
+
+                </tbody>
+            
+            </table>
+        </div>
+        </template>
+      <br>
+            <div class="slds-grid">
+              <div class="slds-col slds-m-left_small">
+                  <lightning-button variant="brand" label="Add more transactions" onclick={handleClick}></lightning-button>
+              </div>
+              <div class="slds-col">
+                  <lightning-button  variant="brand" label="Save" onclick={saveB}></lightning-button>
+                   &nbsp;
+                  <lightning-button variant="neutral" label="Cancel" onclick={closeQuickAction}> </lightning-button>
+              </div>
+          </div>
+           
+            
+  
+     
+
+</lightning-record-edit-form>
+             
+  </lightning-card>
+</template>
