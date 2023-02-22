@@ -25,13 +25,22 @@
                       </template>
                       <div class="slds-col">
                         <label for="cmpyid"><div class="required-field">Company</div></label>
-                        <c-custom-lookup id="cmpyid" obj-name="Company__c" search-placeholder="Search Company" filter="" accountid="" icon-name="standard:customers" onlookupselected={handleCompany}> </c-custom-lookup>
+                        <c-custom-lookup id="cmpyid" obj-name="Company__c" search-placeholder="Search Company" filter="" accountid="" icon-name="standard:customers"  onlookupselected={handleCompany}> </c-custom-lookup>
                         <!-- <lightning-input-field  id="cmpyid" variant="label-hidden" field-name="Company__c" ></lightning-input-field> -->
                       </div>
-                      <div class="slds-col slds-m-right_small">
-                        <label for="walocid"><div class="required-field">Warehouse Location</div></label>
-                        <c-custom-lookup id="walocid" obj-name="Location__c" search-placeholder="Search Warehouse Location" filter="Warehouse" accountid="" icon-name="standard:home" onlookupselected={handleLocation}> </c-custom-lookup>
-                      </div>
+                      <template if:true={showcomp}>
+                        <div class="slds-col slds-m-right_small">
+                          <label for="ware1id" class="required-field">Warehouse Location</label>
+                              <lightning-input id="ware1id" required="true" variant="label-hidden" disabled="true" type="text" label="" value={compname} ></lightning-input> 
+                         </div>
+                      </template>
+                      <template if:false={showcomp}>
+                          <div class="slds-col slds-m-right_small">
+                            <label for="wareid" class="required-field">Warehouse Location</label>
+                            <c-custom-lookup id="wareid" obj-name="Location__c" search-placeholder="Search Warehouse Location" filter="" accountid={company} icon-name="standard:contact" onlookupselected={handleLocation}> </c-custom-lookup>
+                           </div>
+                        </template>
+                      
                 </div>
                 <br>
                 <div class="slds-grid slds-gutters">
@@ -61,7 +70,7 @@
        
               <div class="slds-grid slds-wrap slds-size_1-of-1 slds-medium-size_8-of-12 slds-large-size_5-of-12">
                   <div class="slds-align_absolute-center slds-p-top_xx-small slds-col">
-                    <lightning-button label="Remove" icon-name="utility:close" icon-position="left" onclick={removeindexrow} name={rec.index}></lightning-button>
+                    <lightning-button label="Remove" icon-name="utility:close" icon-position="left" onclick={removeRow} name={rec.index} data-id={index}></lightning-button>
                   </div>
                   <div class="slds-col slds-size_4-of-6 slds-medium-size_8-of-12 slds-large-size_8-of-12">
                     <template if:true={showtrans}>
@@ -74,7 +83,7 @@
                           <div class="slds-col">
                             <br>
                             <label>Select Transaction</label>
-                            <c-custom-lookup obj-name="Purchase_Order__c" search-placeholder="Search Purchase Order" filter="" accountid={accountId} icon-name="standard:work_order_item" onlookupselected={handlePOSelection}> </c-custom-lookup>
+                            <c-custom-lookup obj-name="Purchase_Order__c" search-placeholder="Search Purchase Order" filter="" accountid={accountId} icon-name="standard:work_order_item" data-id={rec.index} onlookupselected={handlePOSelection}> </c-custom-lookup>
                            </div>
                         
                         </template>
@@ -138,7 +147,7 @@
                 </thead>
            
                 <tbody>
-                    <template for:each={poplist} for:item="lst" for:index="index">
+                    <template for:each={rec.pop} for:item="lst" for:index="index">
                         <tr key={lst}>
                           <td>{lst.index}</td>
 
@@ -156,13 +165,13 @@
               
                     <td>
                         <div>
-                            <lightning-input name="Received_Quantity__c" type="number" data-id={rec.index} onchange={handleInputChange} title="Received Qty">
+                            <lightning-input name="Received_Quantity__c" type="number" data-id={rec.index} onchange={handleReqQuan} title="Received Qty">
                             </lightning-input>
                         </div>
                     </td>
                     <td>
                         <div>
-                            <lightning-combobox type="combobox" data-id={rec.index} placeholder="Select Status" title="Status"  onchange={handleInputChange} options={statusoptions} name="Status__c">
+                            <lightning-combobox type="combobox" data-id={rec.index} placeholder="Select Status" title="Status"  onchange={handleStatus} options={statusoptions} name="Status__c">
                             </lightning-combobox>
                         </div>
                     </td>
@@ -173,14 +182,14 @@
                             <template if:true={showbin}>
                                 <div>
                 
-                                      <lightning-input data-id={rec.index} name="Bin_Location__c" required="true" variant="label-hidden"  type="text" label="" value={binname}></lightning-input> 
+                                      <lightning-input data-id={rec.index} name="Bin_Location__c" required="true" variant="label-hidden"  type="text" label="" value={binname} onchange={handleBinname}></lightning-input> 
                                  </div>
                               </template>
                               <template if:false={showbin}>
                                   <div>
                                    
                                     
-                                    <c-custom-lookup data-id={rec.index} name="Bin_Location__c" obj-name="Bin_Location__c" search-placeholder="Search Bin Location" filter="" accountid={location} icon-name="standard:work_order_item" onlookupselected={handleBinSelection}> </c-custom-lookup>
+                                    <c-custom-lookup data-id={rec.index} name="Bin_Location__c" obj-name="Bin_Location__c" search-placeholder="Search Bin Location" filter="" value={binName} accountid="" icon-name="standard:work_order_item" onlookupselected={handleBinNameLookUp}> </c-custom-lookup>
                                    </div>
                                 
                                 </template>
@@ -189,13 +198,13 @@
                     </td>
                     <td>
                         <div>
-                            <lightning-input name = "Batch_No__c" type="number" data-id={rec.index} onchange={handleInputChange} title ="Batch No">
+                            <lightning-input name = "Batch_No__c" type="text" data-id={rec.index} onchange={handleBatch} title ="Batch No">
                             </lightning-input>
                         </div>
                     </td>
                     <td>
                         <div>
-                            <lightning-input  name ="Expiry_Date__c"  type="date" data-id={rec.index} onchange={handleInputChange} title ="Expiry Date">
+                            <lightning-input  name ="Expiry_Date__c"  type="date" data-id={rec.index} onchange={handleExDate} title ="Expiry Date">
                             </lightning-input>
                         </div>
                     </td>
