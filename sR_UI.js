@@ -3,6 +3,7 @@ import getcontactdetails from'@salesforce/apex/stockReceiving.getcontactdetails'
 import getproductsdetails from '@salesforce/apex/stockReceiving.getproductsdetails';
 import gettransactiondetails from '@salesforce/apex/stockReceiving.gettransactiondetails';
 import getbinlocation from '@salesforce/apex/stockReceiving.getbinlocation';
+import getlocation from '@salesforce/apex/stockReceiving.getlocation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';//to show the error message
 import createsol from '@salesforce/apex/stockReceiving.createsol';
 import { NavigationMixin } from 'lightning/navigation';//we used for navigating to the record page after cliclking the save button 
@@ -31,7 +32,6 @@ export default class SR_UI extends NavigationMixin(LightningElement) {
     @api objectApiName;
     myValue;
     filter;
-    poplist;
     accountId;
     cnctname;
     cnctId;
@@ -51,7 +51,11 @@ export default class SR_UI extends NavigationMixin(LightningElement) {
     Notes = '';
     company;
     location;
-    @ track orderLines=[] ;
+    compname;
+    showcomp = false;
+    compid
+    @track statusMap = [];
+    @track orderLines=[];
 
     handleChangeReceivedDateTime(event){
       this.ReceivedDateTime = event.detail.value;
@@ -63,6 +67,30 @@ export default class SR_UI extends NavigationMixin(LightningElement) {
 
 handleChangeNotes(event){
   this.Notes = event.target.value;
+}
+handleReqQuan(event){
+  this.recquan = event.target.value;
+}
+handleStatus(event){
+  
+  this.status = event.target.value;
+ 
+  
+}
+handleBatch(event){
+  this.batch =event.target.value;
+}
+handleExDate(event){
+  this.exdate = event.target.value;
+}
+handleBinname(event){
+  this.binname = event.target.value;
+  console.log('binname'+this.binname);
+}
+
+handleBinNameLookUp(event){
+this.binname=event.detail;
+console.log('this.binaName--->'+this.binname);
 }
 
 handleChange(event) {
@@ -81,6 +109,54 @@ handleCompany(event){   //event.detail.value is used for the lookup fields
     this.location =event.detail;
   }
 
+handleCompany(event){   //event.detail.value is used for the lookup fields
+  this.company = event.detail;             //event.target.value for input fields 
+  getlocation({loca: this.company })
+                .then(result => {
+                  if(result.length == 1){
+                    this.showcomp = true;
+                     this.compname = result[0].Name;
+                     this.location =this.compname;
+                     this.compid = result[0].Id;
+                     console.log('tran>>'+this.compname);
+                     console.log('id>>'+this.compid);
+                     getbinlocation({loc: this.compid })
+                .then(result => {
+                  if(result.length == 1){
+                    this.showbin = true;
+                     this.binname = result[0].Name;
+                     this.binId = result[0].Id;
+                     console.log('tran>>'+this.binname);
+                  }
+                  else{
+                     this.showbin=false;
+                  }
+                })
+                .catch(error =>{
+                  console.log('error of bin>>'+JSON.stringify(error));
+                });
+                  }
+                  else{
+                     this.showcomp=false;
+                  }
+                })
+                .catch(error =>{
+                  console.log('error>>'+error);
+                });
+                
+  
+
+              }
+    
+
+
+  // handleLocation(event){
+  //   alert('hi');
+  //   this.location = event.detail;
+    
+
+  // }
+
   //  handlePOSelection(event){
   //   this.purchaseOrd = event.detail;
   //   getproductsdetails({pursOrd: this.purchaseOrd})
@@ -96,15 +172,29 @@ handleCompany(event){   //event.detail.value is used for the lookup fields
 
   handlePOSelection(event){
     this.purchaseOrd = event.detail;
+    let index = event.target.dataset.id;
+    console.log('index>>>'+index);
     getproductsdetails({pursOrd: this.purchaseOrd})
     .then(result => {
     
     let resultArray=result;
-    this.poplist = resultArray.map((record, index) => {
+    let poplist = resultArray.map((record, index) => {
       return {...record,index: index+1};
      
     });
-    console.log('pop'+JSON.stringify(this.poplist)); 
+    console.log('orderline lenth>>>'+this.orderLines.length);
+    for(let i = 0; i < this.orderLines.length; i++) {
+      // console.log('378>>>>'+this.orderLines[i].index);
+      // console.log('379>>>>'+parseInt(index));
+      if(this.orderLines[i].index === parseInt(index)) {
+          this.orderLines[i].pop = poplist;
+          console.log('this.orderLines>>>>'+ JSON.stringify(this.orderLines));
+      }
+    }
+    
+
+
+    console.log('pop'+JSON.stringify(poplist)); 
 })
 .catch(error => {
   console.log('error>>'+error);
@@ -145,21 +235,7 @@ handleCompany(event){   //event.detail.value is used for the lookup fields
                 .catch(error =>{
                   console.log('error>>'+error);
                 });
-      getbinlocation({loc: this.location })
-                .then(result => {
-                  if(result.length == 1){
-                     this.binname = result[0].Name;
-                     this.showbin = true;
-                     console.log('tran>>'+this.binname);
-                  }
-                  else{
-                     this.showbin=false;
-                  }
-                })
-                .catch(error =>{
-                  console.log('error>>'+error);
-                });
-  
+      
 
 }
  
@@ -203,14 +279,14 @@ createRow(orderLines){
    }
    // we need to add the fields which are need to be added in the sol line items 
    // and dont forget to add in the html part `binding the API name to the input or custom input(maybe ) so that the values get stored accurately
-   solObject.Product__c = '';
-   solObject.Ordered_Qty__c = 0;
-   solObject.Remaining_Quantity__c = 0;
-   solObject.Status__c='';
-   solObject.Received_Quantity__c = 0;
-   solObject.Bin_Location__c= '';
-   solObject.Batch_No__c = 0;
-   solObject.Expiry_Date__c='';
+  //  solObject.Product__c = '';
+  //  solObject.Ordered_Qty__c = 0;
+  //  solObject.Remaining_Quantity__c = 0;
+  //  solObject.Status__c='';
+  //  solObject.Received_Quantity__c = 0;
+  //  solObject.Bin_Location__c= '';
+  //  solObject.Batch_No__c = 0;
+  //  solObject.Expiry_Date__c='';
    
    orderLines.push(solObject);
    console.log('sfs'+JSON.stringify(orderLines));
@@ -226,15 +302,24 @@ handleInputChange(event) {
   let value = event.target.value;
   // console.log('index>>'+ index + 'fieldName>>' +fieldName + 'value>'+value);
   // console.log('len>>>>'+this.orderLines.length);
-  for(let i = 0; i < this.poplist.length; i++) {
+ /* for(let i = 0; i < this.poplist.length; i++) {
       // console.log('378>>>>'+this.orderLines[i].index);
       // console.log('379>>>>'+parseInt(index));
       if(this.poplist[i].index === parseInt(index)) {
           this.poplist[i][fieldName] = value;
           console.log('this.orderLines[i].fieldName>>>>'+ this.poplist[i][fieldName]);
       }
+  }*/
+for(let i = 0; i < this.orderLines.length; i++) {
+  // console.log('378>>>>'+this.orderLines[i].index);
+  // console.log('379>>>>'+parseInt(index));
+  if(this.orderLines[i].index === parseInt(index)) {
+      this.orderLines[i][fieldName] = value;
+      console.log('this.orderLines[i].fieldName>>>>'+ this.orderLines[i][fieldName]);
   }
-  console.log('hhhhhhhhhhhhhhhhhhh'+ JSON.stringify(this.poplist));
+}
+
+  console.log('hhhhhhhhhhhhhhhhhhh'+ JSON.stringify(this.orderLines));
 
 }
 handleBinSelection(event){
@@ -280,6 +365,19 @@ removeindexrow(event){
         
                 this.orderLines = orderLines; 
       }
+    removeRow(event){
+            var selectedRow = event.currentTarget;
+            console.log('selectedRow>>'+selectedRow);
+            let key = selectedRow.dataset.id;
+            console.log('key>>'+key);
+             if(this.orderLines.length>1){
+                this.orderLines.splice(key, 1);
+            }else if(this.orderLines.length == 1){
+                this.orderLines = [];
+
+               
+            }
+        }
       /*
       handleInputChange(event) {
         let index = event.target.dataset.id;
@@ -314,7 +412,7 @@ removeindexrow(event){
           this.dispatchEvent(evt);
           return;
         }*/
-    
+        
         const fields = {};
             
     
@@ -322,7 +420,7 @@ removeindexrow(event){
         fields[Vendor_Field.fieldApiName] = this.accountId;
         fields[Contact_Field.fieldApiName] = this.cnctId;
         fields[Company_Field.fieldApiName] = this.company;
-        fields[Warehouse_Location_Field.fieldApiName] = this.location;
+        fields[Warehouse_Location_Field.fieldApiName] = this.compid;
         fields[Received_Date_Time_Field.fieldApiName] = this.ReceivedDateTime;
         fields[Delivery_Note_Number_Field.fieldApiName]= this.DeliveryNoteNumber;
         fields[Notes_Field.fieldApiName]=this.Notes;
@@ -351,19 +449,20 @@ removeindexrow(event){
                 
     
                 // to navigate to the record page which was created newly 
-                this[NavigationMixin.GenerateUrl]({
-                    type: 'standard__recordPage',
-                    attributes: {
-                        recordId: this.accountId,
-                        actionName: 'view',
-                    },
-                }).then((url) => {
-                    this.recordPageUrl = url;
-                    window.location.assign(url);
+                // this[NavigationMixin.GenerateUrl]({
+                //     type: 'standard__recordPage',
+                //     attributes: {
+                //         recordId: this.accountId,
+                //         actionName: 'view',
+                //     },
+                // }).then((url) => {
+                //     this.recordPageUrl = url;
+                //     window.location.assign(url);
     
-                });
+                // });
             })
             .catch(error => {
+              
                 this.dispatchEvent(
                     new ShowToastEvent({
                         title: 'Error creating record',
@@ -371,45 +470,47 @@ removeindexrow(event){
                         variant: 'error',
                     }),
                 );
+                console.log('Err'+JSON.stringify(error.body));
             });
             
         }
     
         createAccounts()
         {
-            for(let i = 0; i < this.poplist.length; i++) {
-                
-                    this.poplist[i].Stock_Receiving__c = this.accountId;
-                    this.poplist[i].Ordered_Qty__c = this.poplist[i].Quantity__c;
-                    this.poplist[i].Remaining_Quantity__c = this.poplist[i].Remaining_Qty__c;
-                    this.poplist[i].Net_Amount__c= this.poplist[i].Net_Amount__c;
-                    this.poplist[i].Total_Amount__c = this.poplist[i].Total_Amount__c;
-                    this.poplist[i].Unit_Price__c = this.poplist[i].Unit_Price__c;
-            
-                
-    
+          let finalpoplist=[];
+          
+            for(let i = 0; i < this.orderLines.length; i++) {
+              console.log('callforloop');
+              for(let j=0; j<this.orderLines[i].pop.length;j++)
+              {
+                finalpoplist.push(this.orderLines[i].pop[j]);
+              }
+              
+              console.log('endforloop');
             }
-            console.log('order@@'+JSON.stringify(this.poplist));
-                    createsol({ jsonOfListOfSol:JSON.stringify(this.poplist)})
+
+            console.log('order@@'+JSON.stringify(finalpoplist));
+            console.log('Account id'+this.accountId);
+                    createsol({ jsonOfListOfSol:JSON.stringify(finalpoplist),SRPId: this.accountId, binname:this.binId, recquan: this.recquan,status:this.status, batch:this.batch,exdate : this.exdate})
                     .then(result => {
                         console.log('@@inserted'+result);
                     })
                     .catch(error => {
-                        console.log('error>>'+error);
+                        console.log('error>>'+JSON.stringify(error));
                     });
 
 
-                    if(this.poplist==undefined || this.poplist==null || this.poplist==''){
+                    // if(this.poplist==undefined || this.poplist==null || this.poplist==''){
 
-                      const evt = new ShowToastEvent({
-                          title: 'Error',
-                          message: 'Add atleast one line item.',
-                          variant: this.variant,
+                    //   const evt = new ShowToastEvent({
+                    //       title: 'Error',
+                    //       message: 'Add atleast one line item.',
+                    //       variant: this.variant,
                           
-                      });
+                    //   });
                       
-                      this.dispatchEvent(evt);
-                    }
+                    //   this.dispatchEvent(evt);
+                    // }
             
         } 
         
