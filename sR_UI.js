@@ -25,6 +25,7 @@ import Purchase_Order_Field from '@salesforce/schema/Stock_Recieving__c.Purchase
 
 
 export default class SR_UI extends NavigationMixin(LightningElement) {
+  contactName =true;
     selectedAccount;
     selectedContact;
     isClicked = false;
@@ -53,9 +54,13 @@ export default class SR_UI extends NavigationMixin(LightningElement) {
     location;
     compname;
     showcomp = false;
-    compid
-    @track statusMap = [];
+    compid;
+    batchList=[];
+    exdateList = [];
+    recquanList = [];
+    @track statusList = [];
     @track orderLines=[];
+    recquan;
 
     handleChangeReceivedDateTime(event){
       this.ReceivedDateTime = event.detail.value;
@@ -70,18 +75,23 @@ handleChangeNotes(event){
 }
 handleReqQuan(event){
   this.recquan = event.target.value;
+  this.recquanList.push(this.recquan);
 }
 handleStatus(event){
   
   this.status = event.target.value;
+  this.statusList.push(this.status);
  
   
 }
 handleBatch(event){
   this.batch =event.target.value;
+  this.batchList.push(this.batch);
+  console.log('batchhandleBatch'+this.batchList);
 }
 handleExDate(event){
   this.exdate = event.target.value;
+  this.exdateList.push(this.exdate);
 }
 handleBinname(event){
   this.binname = event.target.value;
@@ -170,6 +180,7 @@ handleCompany(event){   //event.detail.value is used for the lookup fields
 
   //  }
 
+
   handlePOSelection(event){
     this.purchaseOrd = event.detail;
     let index = event.target.dataset.id;
@@ -256,7 +267,7 @@ handleCompany(event){   //event.detail.value is used for the lookup fields
   const evt = new ShowToastEvent({
       title: 'Error',
       message: 'Select the Vendor before adding transactions.',
-      variant: this.variant,
+      variant: 'error'
       
   });
   
@@ -398,20 +409,20 @@ removeindexrow(event){
     }*/
 
       saveB() {
-       /* console.log('test@@');
-        console.log('test@@'+this.poplist.length);
-        if(this.poplist.length == 0 ){
+    
+        if(this.orderLines.length == 0 ){
 
           const evt = new ShowToastEvent({
               title: 'Error',
-              message: 'Select the PO.',
-              variant: this.variant,
+              message: 'Add Atleast One Stock Receiving Item.',
+              variant: 'error'
+
               
           });
           
           this.dispatchEvent(evt);
           return;
-        }*/
+        }
         
         const fields = {};
             
@@ -491,21 +502,23 @@ removeindexrow(event){
 
             console.log('order@@'+JSON.stringify(finalpoplist));
             console.log('Account id'+this.accountId);
-                    createsol({ jsonOfListOfSol:JSON.stringify(finalpoplist),SRPId: this.accountId, binname:this.binId, recquan: this.recquan,status:this.status, batch:this.batch,exdate : this.exdate})
+            console.log('batch'+this.batchList);
+                    createsol({ jsonOfListOfSol:JSON.stringify(finalpoplist),SRPId: this.accountId, binname:this.binId, recquan: this.recquanList,status:this.statusList, batch:this.batchList,exdate : this.exdateList})
                     .then(result => {
                         console.log('@@inserted'+result);
+                       
                     })
                     .catch(error => {
-                        console.log('error>>'+JSON.stringify(error));
+                        console.log('errorcreatesol>>'+JSON.stringify(error));
                     });
 
-
-                    // if(this.poplist==undefined || this.poplist==null || this.poplist==''){
-
+                    // console.log("finalpopbeforeif"+this.finalpoplist.Received_Quantity__c);
+                    // if(this.finalpoplist.Received_Quantity__c==undefined || this.finalpoplist.Received_Quantity__c==null  || this.finalpoplist.finalpoplist.Received_Quantity__c == 0){
+                    //  console.log("finalpopafterif"+this.finalpoplist.Received_Quantity__c);
                     //   const evt = new ShowToastEvent({
                     //       title: 'Error',
-                    //       message: 'Add atleast one line item.',
-                    //       variant: this.variant,
+                    //       message: 'Receiving Quantity can\'t be empty or zero ',
+                    //       variant: 'error',
                           
                     //   });
                       
